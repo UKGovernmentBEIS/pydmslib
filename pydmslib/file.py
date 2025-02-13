@@ -16,5 +16,8 @@ def read_parquet_files_and_add_input_file(dir: str, pattern: str = ""):
     """
     file_path = dir + pattern
 
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"The specified path {file_path} does not exist.")
+
     df = spark.read.parquet(file_path)
     return df.withColumn("inputFile", f.col("_metadata.file_name"))
