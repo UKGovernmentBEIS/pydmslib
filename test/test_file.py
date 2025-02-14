@@ -36,7 +36,7 @@ def test_read_parquet_files_and_add_input_file(spark, tmp_path):
     assert result_data == df.collect()
 
 def test_read_parquet_files_with_pattern(spark, tmp_path):
-    """Tests that read_parquet_files_and_add_input_file reads/adds filename column for valid parquets"""
+    """Tests reads/adds filename column for valid parquets"""
     # Create a temporary directory
     temp_dir = tmp_path / "parquet_files"
     temp_dir.mkdir()
