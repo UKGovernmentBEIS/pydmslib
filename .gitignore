@@ -5,3 +5,5 @@ pydmslib.egg-info/
 databricks.yml
 .vscode/
 __pycache__
+
+.databricks
