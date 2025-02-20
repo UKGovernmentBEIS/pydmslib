@@ -3,7 +3,7 @@ import pyspark.sql.functions as f
 from pyspark.sql import SparkSession
 
 spark = SparkSession.builder.getOrCreate()
-
+dbutils = DBUtils(spark)
 def read_parquet_files_and_add_input_file(directory: str, pattern: str = ""):
     """
     Reads Parquet files from the specified directory and 
