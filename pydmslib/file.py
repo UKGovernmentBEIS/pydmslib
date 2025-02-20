@@ -47,21 +47,25 @@ def crawl(path: str, trim_size=None):
     :param trim_size: How many characters to trim returned paths by (defaults to path length)
     :return: yields strings
     """
-    if path[-1] != "/":
-        path = path + "/"
+    if not path.endswith("/"):
+        path += "/"
+    
     if trim_size is None:
-        if path[:6] == "dbfs:/":
+        if path.startswith("dbfs:/"):
             trim_size = len(path)
-        elif path[0] == "/":
+        elif path.startswith("/"):
             trim_size = 5 + len(path)
         else:
             trim_size = 6 + len(path)
-    for f in dbutils.fs.ls(path):
-        if f.path[-1] != "/":
-            yield f.path[trim_size:]
-        else:
-            for g in crawl(f.path, trim_size):
-                yield g
+    
+    def list_files(directory):
+        for f in dbutils.fs.ls(directory):
+            if f.path.endswith("/"):
+                yield from list_files(f.path)
+            else:
+                yield f.path[trim_size:]
+    
+    return list_files(path)
 
 def identify_to_process(metadata, process_dir, my_config=""):
     # Calculate files already processed
