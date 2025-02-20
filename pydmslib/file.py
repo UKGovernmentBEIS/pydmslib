@@ -95,19 +95,15 @@ def identify_to_process(metadata, process_dir, my_config=""):
     if already_processed is None:
         files_to_process = [f for f, _ in all_grant_files] # Just return all files if no metadata
     else:
-        # Create a DataFrame for all_grant_files
-
+        # Define the schema (this part is crucial and should be *inside* the function)
         schema = StructType([
-            StructField("file_name", StringType(), True),  # True means nullable
+            StructField("file_name", StringType(), True),
             StructField("config", StringType(), True)
         ])
-        
-        all_files_df = spark.createDataFrame(all_grant_files, schema=schema) # Requires a spark session
 
-        # Use a left anti join to efficiently find the difference
+        all_files_df = spark.createDataFrame(all_grant_files, schema=schema) # Use the schema here
+
         files_to_process_df = all_files_df.join(already_processed, ["file_name", "config"], "left_anti")
-
-        # Extract the file names
         files_to_process = [row.file_name for row in files_to_process_df.collect()]
 
     # Done
