@@ -24,6 +24,22 @@ def read_parquet_files_and_add_input_file(directory: str, pattern: str = ""):
     df = spark.read.parquet(file_path)
     return df.withColumn("inputFile", f.col("_metadata.file_name"))
 
+def exists(path):
+    """
+
+    :param path: hdfs path
+    :return: If the supplied path exists (bool)
+    """
+    # https://forums.databricks.com/questions/20129/how-to-check-file-exists-in-databricks.html
+    try:
+        dbutils.fs.ls(path)
+        return True
+    except Exception as e:
+        if 'java.io.FileNotFoundException' in str(e):
+            return False
+        else:
+            raise
+
 def crawl(path: str, trim_size=None):
     """
     Lists all files under a directory
