@@ -43,31 +43,38 @@ def exists(path):
             raise
 
 def crawl(path: str, trim_size=None):
-    """
-    Lists all files under a directory
-    :param path: hdfs path
-    :param trim_size: How many characters to trim returned paths by (defaults to path length)
-    :return: yields strings
-    """
+    """Lists all files under a directory, optimized."""
+
     if not path.endswith("/"):
         path += "/"
-    
+
     if trim_size is None:
-        if path.startswith("dbfs:/"):
-            trim_size = len(path)
-        elif path.startswith("/"):
-            trim_size = 5 + len(path)
-        else:
-            trim_size = 6 + len(path)
-    
-    def list_files(directory):
-        for f in dbutils.fs.ls(directory):
-            if f.path.endswith("/"):
-                yield from list_files(f.path)
+        trim_size = len(path) if path.startswith("dbfs:/") else (5 + len(path) if path.startswith("/") else 6 + len(path))
+
+    try:  # Handle potential exceptions during file listing
+        files = dbutils.fs.ls(path)  # Initial listing
+        all_files = []
+
+        while files:  # Iterate through the results of dbutils.fs.ls
+            new_dirs = []
+            for f in files:
+                if f.path.endswith("/"):
+                    new_dirs.append(f.path)  # Add directory to list for processing
+                else:
+                    all_files.append(f.path[trim_size:])  # Add file to results
+            
+            # Efficiently list subdirectories
+            if new_dirs:
+                files = []
+                for dir in new_dirs:
+                    files.extend(dbutils.fs.ls(dir)) # List all subdirectories in one go
             else:
-                yield f.path[trim_size:]
-    
-    return list_files(path)
+                files = None # No more directories to process
+
+        return all_files # Return all files at once as a list
+    except Exception as e: # Catch any exceptions
+        print(f"Error listing files in {path}: {e}")
+        return [] # Return empty list in case of errors
 
 def identify_to_process(metadata, process_dir, my_config=""):
     # Calculate files already processed
