@@ -102,7 +102,7 @@ def identify_to_process(metadata, process_dir, my_config=""):
             StructField("config", StringType(), True)
         ])
         
-        all_files_df = spark.createDataFrame(all_grant_files, ["file_name", "config"], schema=schema) # Requires a spark session
+        all_files_df = spark.createDataFrame(all_grant_files, schema=schema) # Requires a spark session
 
         # Use a left anti join to efficiently find the difference
         files_to_process_df = all_files_df.join(already_processed, ["file_name", "config"], "left_anti")
