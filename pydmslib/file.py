@@ -90,8 +90,8 @@ def identify_to_process(metadata, process_dir, my_config=""):
 
     # Get all files in the grant directory
     all_grant_files = list(crawl(process_dir))
+    all_grant_files = [(file_path, my_config) for file_path in all_grant_files]
 
-    print(all_grant_files)
     # Add config to all_grant_files
     if already_processed is None:
         files_to_process = [f for f, _ in all_grant_files] # Just return all files if no metadata
