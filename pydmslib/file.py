@@ -70,12 +70,12 @@ def crawl(path: str, trim_size=None):
 def identify_to_process(metadata, process_dir, my_config=""):
     # Calculate files already processed
     if metadata is None:
-        already_processed = set()
+        already_processed = None
     else:
         if "config" not in metadata.columns:
             metadata = metadata.withColumn("config", f.lit(my_config))
-        already_processed = set(
-            [(x["file_name"], x["config"]) for x in metadata.select(f.col("file_name"), f.col("config")).collect()])
+            
+        already_processed = metadata.select("file_name", "config").distinct() 
 
     # Check if grant directory exists
     if not exists(process_dir):
@@ -90,14 +90,17 @@ def identify_to_process(metadata, process_dir, my_config=""):
     all_grant_files = list(crawl(process_dir))
 
     # Add config to all_grant_files
-    all_grant_files = [(x, my_config) for x in all_grant_files]
+    if already_processed is None:
+        files_to_process = [f for f, _ in all_grant_files] # Just return all files if no metadata
+    else:
+        # Create a DataFrame for all_grant_files
+        all_files_df = spark.createDataFrame(all_grant_files, ["file_name", "config"]) # Requires a spark session
 
-    # Set difference to get all files to process
-    files_to_process = list(set(all_grant_files) - already_processed)
+        # Use a left anti join to efficiently find the difference
+        files_to_process_df = all_files_df.join(already_processed, ["file_name", "config"], "left_anti")
 
-    # Drop config names from files to process
-    # Use a set as files will be processed more than once for different past configs
-    files_to_process = list(set([x[0] for x in files_to_process]))
+        # Extract the file names
+        files_to_process = [row.file_name for row in files_to_process_df.collect()]
 
     # Done
     return files_to_process
