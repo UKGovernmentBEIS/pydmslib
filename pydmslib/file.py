@@ -1,7 +1,9 @@
 """ file.py contains methods that help with standardising reading/cleaning steps """
 import pyspark.sql.functions as f
 from pyspark.sql import SparkSession
+from pyspark.sql.types import StructType, StructField, StringType
 from pyspark.dbutils import DBUtils
+
 
 spark = SparkSession.builder.getOrCreate()
 dbutils = DBUtils(spark)
